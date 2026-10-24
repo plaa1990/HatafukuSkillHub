@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>สตูดิโอวาดรูป</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="app.css">
+<style>html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column;font-size:14px;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.row{display:flex;gap:6px;align-items:center;padding:6px 8px;overflow-x:auto;border-bottom:1px solid var(--line)}.row>*{flex:none}
+#vp{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;background:#0004}
+#st{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:0 4px 24px #0008}
+#cv{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#ref{position:absolute;right:6px;top:6px;width:30%;max-width:240px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;display:none}#ref img{width:100%;display:block}
+#ly{max-height:30vh;overflow:auto}.ly{display:flex;gap:4px;align-items:center;padding:3px 8px}.ly .n{flex:1;text-align:left}.dock{position:relative;border-top:1px solid var(--line);background:var(--bg)}
+#sheet{position:absolute;bottom:100%;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);max-height:45vh;overflow:auto;box-shadow:0 -8px 20px #0006}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:6px 8px 0}.t{display:flex;flex-direction:column;align-items:center;font-size:12px;padding:4px 2px;min-height:54px}.t b{font-size:20px;font-weight:400}
+.row2{display:flex;gap:10px;align-items:center;padding:6px 12px}.row2 input[type=range]{flex:1}input[type=color]{width:48px;height:44px;padding:0;border:1px solid var(--line);border-radius:8px;background:none}
+.ly button{min-width:40px;min-height:40px}#ref button{position:absolute;top:2px;right:2px;min-height:32px}.row2 label{flex:1;display:flex;gap:4px;align-items:center;color:var(--mu);font-size:12px}#brushes{border-bottom:0}#brushes button{white-space:nowrap}#hex{width:170px;background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:16px monospace;min-height:44px}#sw{display:flex;gap:6px}#sw button{min-width:36px;min-height:36px;width:36px;padding:0;border-radius:50%}</style></head><body>
+<div class="row"><a class="b" href="index.html" aria-label="กลับหน้าหลัก">←</a><button id="undo" aria-label="ย้อนกลับ">↶</button><button id="redo" aria-label="ทำซ้ำ">↷</button><button id="fit" aria-label="รีเซ็ตมุมมอง">⤢</button><span style="flex:1"></span><span id="inf" style="color:var(--mu);font-size:12px"></span><button id="rf" aria-label="รูปอ้างอิง">🖼</button><button id="png" aria-label="ดาวน์โหลด PNG">⬇</button></div>
+<div id="vp"><div id="st"><canvas id="cv"></canvas></div><div id="ref"><img id="ri" alt="รูปอ้างอิง"><button id="rx" aria-label="ปิดรูปอ้างอิง">✕</button></div></div>
+<div class="dock"><div id="sheet" hidden><div class="row"><button id="al">+ เพิ่มชั้น</button><span style="flex:1"></span><button id="cl">ปิด</button></div><div id="ly" role="list"></div></div>
+<nav id="brushes" class="row" aria-label="แปรง"></nav><div class="tools"><button class="t on" id="tb"><b>✏️</b>แปรง</button><button class="t" id="te"><b>🧽</b>ยางลบ</button><button class="t" id="tp"><b>💧</b>ดูดสี</button><button class="t" id="sy" aria-pressed="false"><b>⇋</b>สมมาตร</button><button class="t" id="ls"><b>☰</b>ชั้น</button></div>
+<div class="row"><input id="col" type="color" value="#222222" aria-label="เลือกสี"><input id="hex" value="#222222" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="วางค่าสี เช่น #E8A87C" aria-label="ใส่ค่าสี (วางได้หลายสี)"><button id="ah">เพิ่ม</button><span id="sw"></span><button id="cs" aria-label="ล้างชุดสีที่เก็บไว้">ล้าง</button></div><div class="row2"><label>ขนาด<input id="sz" type="range" min="1" max="120" value="8"></label><label>เข้ม<input id="alpha" type="range" min="5" max="100" value="100"></label></div></div>
+<script src="app.js"></script><script>
+const W=1200,H=900,cv=$('cv'),cx=cv.getContext('2d'),vp=$('vp'),st=$('st');cv.width=W;cv.height=H;
+let LY=[],act=0,cur='taper',sym=false,ud=[],rd=[],V={x:0,y:0,s:1},P=new Map(),dr=false,last,lt,w,g0,tm;
+const mk=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;return c};
+const db=new Promise(r=>{const q=indexedDB.open('sh4',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)});
+const idb=(m,k,v)=>db.then(d=>d&&new Promise(r=>{const o=d.transaction('k',m=='get'?'readonly':'readwrite').objectStore('k'),q=m=='get'?o.get(k):o.put(v,k);q.onsuccess=()=>r(q.result);q.onerror=()=>r()}));
+function render(){cx.globalAlpha=1;cx.fillStyle='#fff';cx.fillRect(0,0,W,H);LY.forEach(l=>{if(l.v){cx.globalAlpha=l.o;cx.drawImage(l.c,0,0)}});cx.globalAlpha=1}
+function saveSoon(){clearTimeout(tm);tm=setTimeout(async()=>{const b=await Promise.all(LY.map(l=>new Promise(r=>l.c.toBlob(r))));await idb('put','doc',{m:LY.map(l=>({v:l.v,o:l.o,n:l.n})),b,act});$('inf').textContent='บันทึกอัตโนมัติแล้ว'},1500)}
+function list(){$('ly').innerHTML='';LY.forEach((l,i)=>{const d=document.createElement('div');d.className='ly';d.setAttribute('role','listitem');
+d.innerHTML='<button class="n'+(i==act?' on':'')+'">'+l.n+'</button><button data-a="v" aria-label="ซ่อนหรือแสดง">'+(l.v?'👁':'—')+'</button><input type="range" min="5" max="100" value="'+l.o*100+'" aria-label="ความโปร่ง" style="width:70px"><button data-a="u" aria-label="เลื่อนขึ้น">↑</button><button data-a="d" aria-label="เลื่อนลง">↓</button><button data-a="c" aria-label="ทำสำเนา">⧉</button><button data-a="x" aria-label="ลบชั้น">✕</button>';
+d.querySelector('.n').onclick=()=>{act=i;list()};d.querySelector('input').oninput=e=>{l.o=e.target.value/100;render();saveSoon()};
+d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a=='v')l.v=!l.v;
+if(a=='u'&&i<LY.length-1){[LY[i],LY[i+1]]=[LY[i+1],LY[i]];act=i+1}if(a=='d'&&i>0){[LY[i],LY[i-1]]=[LY[i-1],LY[i]];act=i-1}
+if(a=='c'&&LY.length<8){const c=mk();c.getContext('2d').drawImage(l.c,0,0);LY.splice(i+1,0,{c,v:l.v,o:l.o,n:l.n+' สำเนา'});act=i+1}
+if(a=='x'&&LY.length>1){LY.splice(i,1);act=Math.min(act,LY.length-1)}render();list();saveSoon()});$('ly').prepend(d)});$('ls').lastChild.textContent='ชั้น '+LY.length}
+$('al').onclick=()=>{if(LY.length>=8)return toast('ครบ 8 ชั้น');LY.push({c:mk(),v:true,o:1,n:'ชั้น '+(LY.length+1)});act=LY.length-1;list();saveSoon()};
+const gc=()=>LY[act].c.getContext('2d');
+function snap(){ud.push({i:act,d:gc().getImageData(0,0,W,H)});if(ud.length>25)ud.shift();rd=[]}
+function swap(a,b){const s=a.pop();if(!s||!LY[s.i])return;const c=LY[s.i].c.getContext('2d');b.push({i:s.i,d:c.getImageData(0,0,W,H)});c.putImageData(s.d,0,0);render();saveSoon()}
+$('undo').onclick=()=>swap(ud,rd);$('redo').onclick=()=>swap(rd,ud);
+const pt=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}};
+function segT(a,b,wd){const c=gc();c.lineCap=c.lineJoin='round';c.lineWidth=wd;c.strokeStyle=$('col').value;c.globalCompositeOperation='source-over';c.globalAlpha=+$('alpha').value/100;
+const f=(a,b)=>{c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()};f(a,b);if(sym)f({x:W-a.x,y:a.y},{x:W-b.x,y:b.y});c.globalAlpha=1}
+const BR={
+ pencil:{n:'ดินสอ',gap:.12,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.35*p;for(let i=0;i<4;i++){c.beginPath();c.arc(x+rnd(-s*.3,s*.3),y+rnd(-s*.3,s*.3),Math.max(.6,s*.22),0,7);c.fill();}}},
+ pen:{n:'ปากกาหมึก',gap:.1,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a;c.beginPath();c.arc(x,y,Math.max(.5,s*p/2),0,7);c.fill();}},
+ marker:{n:'มาร์กเกอร์',gap:.12,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.25;c.globalCompositeOperation='multiply';c.fillRect(x-s/2,y-s/3,s,s*.66);},keepOp:1},
+ brush:{n:'พู่กันหมึก',gap:.06,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.9;c.beginPath();c.ellipse(x,y,Math.max(.6,s*p*.5),Math.max(.6,s*p*.5),0,0,7);c.fill();}},
+ water:{n:'สีน้ำ',gap:.25,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.045;for(let i=0;i<6;i++){c.beginPath();c.arc(x+rnd(-s*.25,s*.25),y+rnd(-s*.25,s*.25),s*rnd(.5,1)*p,0,7);c.fill();}}},
+ air:{n:'แอร์บรัช',gap:.1,fn:(c,x,y,s,p,a)=>{const r=s*1.2,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c.fillStyle);g.addColorStop(1,'transparent');c.globalAlpha=a*.12*p;c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);},grad:1},
+ charcoal:{n:'ถ่าน',gap:.2,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.5;for(let i=0;i<14;i++){const r=s*.55*Math.sqrt(Math.random()),t=rnd(0,6.28);c.fillRect(x+Math.cos(t)*r,y+Math.sin(t)*r,rnd(1,2.6),rnd(1,2.6));}}},
+ chalk:{n:'ชอล์ก/พาสเทล',gap:.15,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.6;for(let i=0;i<22;i++){if(Math.random()<.45)continue;c.fillRect(x+rnd(-s/2,s/2),y+rnd(-s/2,s/2),rnd(1,3.5),rnd(1,3.5));}}},
+ callig:{n:'คัลลิกราฟี',gap:.08,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a;c.beginPath();c.ellipse(x,y,s*.6,Math.max(.8,s*.12),-.78,0,7);c.fill();}},
+ spray:{n:'สเปรย์',gap:.3,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.8;for(let i=0;i<18;i++){const r=s*Math.sqrt(Math.random()),t=rnd(0,6.28);c.fillRect(x+Math.cos(t)*r,y+Math.sin(t)*r,1.4,1.4);}}},
+ pencil6b:{n:'ดินสอ 6B',tip:'ร่างภาพ/ตัดเส้น กดเบาหนักได้',gap:.1,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.5*p;c.beginPath();c.arc(x,y,Math.max(.6,s*.3*(.4+p)),0,7);c.fill();for(let i=0;i<3;i++)c.fillRect(x+rnd(-s*.35,s*.35),y+rnd(-s*.35,s*.35),1,1);}},
+ mono:{n:'โมโนไลน์',tip:'เส้นคงที่ ใช้เขียนตัวอักษร/เส้นชัดๆ',gap:.1,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a;c.beginPath();c.arc(x,y,Math.max(.6,s/2),0,7);c.fill();}},
+ cloud:{n:'ก้อนเมฆ',tip:'ขอบนูนๆ ใช้เขียนหัวข้อตัวใหญ่',gap:.18,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a;for(let i=0;i<6;i++){const t=i*1.047;c.beginPath();c.arc(x+Math.cos(t)*s*.3,y+Math.sin(t)*s*.3,s*.26,0,7);c.fill();}c.beginPath();c.arc(x,y,s*.32,0,7);c.fill();}},
+ crayon:{n:'สีเทียน/แว็กซ์',tip:'ลงพื้นแบบมีเม็ดกระดาษ ซ้อนหลายชั้นได้',gap:.12,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.85;for(let i=0;i<40;i++){if(Math.random()<.35)continue;const r=s*.5*Math.sqrt(Math.random()),t=rnd(0,6.28);c.fillRect(x+Math.cos(t)*r,y+Math.sin(t)*r,rnd(1.2,3),rnd(1.2,3));}}},
+ grain:{n:'ลงพื้นหยาบ',tip:'เนื้อหยาบแบบเม็ดทราย เก็บรายละเอียดด้วยการซ้อนสี',gap:.15,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.9;for(let i=0;i<70;i++){const r=s*.5*Math.sqrt(Math.random()),t=rnd(0,6.28);c.fillRect(x+Math.cos(t)*r,y+Math.sin(t)*r,rnd(1,2),rnd(1,2));}}},
+ softgrain:{n:'ถ่านอัดนุ่ม',tip:'ถ่าน 2B: สร้างเท็กซ์เจอร์/เกลี่ยเงา',gap:.14,fn:(c,x,y,s,p,a)=>{c.globalAlpha=a*.28*p;for(let i=0;i<50;i++){const r=s*.55*Math.sqrt(Math.random()),t=rnd(0,6.28);c.fillRect(x+Math.cos(t)*r,y+Math.sin(t)*r,1.3,1.3);}}},
+ eraser:{n:'ยางลบ',gap:.1,fn:(c,x,y,s,p,a)=>{c.globalAlpha=1;c.beginPath();c.arc(x,y,s/2,0,7);c.fill();},erase:1},
+ fill:{n:'เทสี',fillTool:1}
+};let pp=1;const prs=e=>e.pointerType=='pen'&&e.pressure>0?Math.max(.15,e.pressure):1,rnd=(a,b)=>a+Math.random()*(b-a),hex2rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function stamp(x,y){const b=BR[cur],c=gc();c.save();c.fillStyle=$('col').value;c.globalCompositeOperation=b.erase?'destination-out':'source-over';b.fn(c,x,y,+$('sz').value,pp,$('alpha').value/100);c.restore()}
+function seg(a,b,wd){if(cur=='taper')return segT(a,b,wd);const s=+$('sz').value,st=Math.max(1,s*BR[cur].gap),d=Math.hypot(b.x-a.x,b.y-a.y),n=Math.max(1,Math.ceil(d/st));for(let i=1;i<=n;i++){const t=i/n,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;stamp(x,y);if(sym)stamp(W-x,y)}}
+function flood(sx,sy,hex){const d=cx.getImageData(0,0,W,H).data,[fr,fg,fb]=hex2rgb(hex),i0=(sy*W+sx)*4,tr=d[i0],tg=d[i0+1],tb=d[i0+2];
+const ok=i=>Math.abs(d[i]-tr)+Math.abs(d[i+1]-tg)+Math.abs(d[i+2]-tb)<=60,seen=new Uint8Array(W*H),st=[sx+sy*W];
+while(st.length){const q=st.pop();if(seen[q])continue;const x=q%W,y=q/W|0;if(!ok(q*4))continue;seen[q]=1;if(x>0)st.push(q-1);if(x<W-1)st.push(q+1);if(y>0)st.push(q-W);if(y<H-1)st.push(q+W)}
+const c=gc(),im=c.getImageData(0,0,W,H),o=im.data;for(let q=0;q<W*H;q++)if(seen[q]){o[q*4]=fr;o[q*4+1]=fg;o[q*4+2]=fb;o[q*4+3]=255}c.putImageData(im,0,0)}
+function pick(e){const p=pt(e),d=cx.getImageData(p.x|0,p.y|0,1,1).data;$('col').value='#'+[...d].slice(0,3).map(v=>v.toString(16).padStart(2,'0')).join('');$('hex').value=$('col').value}
+function fit(){const a=vp.clientWidth-16,b=vp.clientHeight-16,s=Math.max(50,Math.min(a,b*4/3));st.style.width=s+'px';st.style.height=s*3/4+'px';V={x:(vp.clientWidth-s)/2,y:Math.max(8,(vp.clientHeight-s*3/4)/2),s:1};ap()}
+const ap=()=>st.style.transform='translate('+V.x+'px,'+V.y+'px) scale('+V.s+')';
+function zoom(cx0,cy0,k,dx=0,dy=0){const n=Math.min(8,Math.max(.3,V.s*k)),r=n/V.s;V.x=cx0-(cx0-V.x)*r+dx;V.y=cy0-(cy0-V.y)*r+dy;V.s=n;ap()}
+const ctr=()=>{const [a,b]=[...P.values()],r=vp.getBoundingClientRect();return{x:(a.clientX+b.clientX)/2-r.left,y:(a.clientY+b.clientY)/2-r.top,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}};
+cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,e);if(P.size==2){if(dr){dr=false;swap(ud,[])}g0=ctr();return}if(P.size>2)return;
+if(cur=='pick'){pick(e);return}if(cur=='fill'){if(!LY[act].v)return toast('ชั้นถูกซ่อนอยู่');snap();const q=pt(e);flood(q.x|0,q.y|0,$('col').value);render();saveSoon();return}if(!LY[act].v)return toast('ชั้นถูกซ่อนอยู่');pp=prs(e);snap();dr=true;last=pt(e);lt=e.timeStamp;w=$('sz').value*.4;seg(last,last,w);render()};
+cv.onpointermove=e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,e);if(P.size==2){const g=ctr();zoom(g.x,g.y,g.d/g0.d,g.x-g0.x,g.y-g0.y);g0=g;return}if(!dr)return;
+pp=prs(e);const p=pt(e),dt=Math.max(1,e.timeStamp-lt),sp=Math.hypot(p.x-last.x,p.y-last.y)/dt/V.s,z=+$('sz').value;
+const t=e.pointerType=='pen'&&e.pressure>0?z*(.25+e.pressure*1.2):z*Math.max(.25,1.2-sp*.5);w+=(t-w)*.35;seg(last,p,w);last=p;lt=e.timeStamp;render()};
+const up=e=>{P.delete(e.pointerId);if(dr){dr=false;saveSoon()}g0=null};cv.onpointerup=cv.onpointercancel=up;
+vp.addEventListener('wheel',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoom(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.1:.9)},{passive:false});
+let lastB='taper';const BK={taper:{n:'เรียวแหลม',tip:'เส้นเรียวตามความเร็วหรือแรงกด'},...BR};
+function selB(k){cur=k;if(!['eraser','fill','pick'].includes(k))lastB=k;if(BK[k]&&BK[k].tip)toast(BK[k].tip);document.querySelectorAll('#brushes button').forEach(e=>e.classList.toggle('on',e.dataset.k==k));$('tb').classList.toggle('on',!['eraser','pick'].includes(k));$('te').classList.toggle('on',k=='eraser');$('tp').classList.toggle('on',k=='pick')}
+$('tb').onclick=()=>selB(lastB);$('te').onclick=()=>selB('eraser');$('tp').onclick=()=>selB('pick');
+Object.entries(BK).forEach(([k,b])=>{if(k=='eraser')return;const e=document.createElement('button');e.textContent=b.n;e.dataset.k=k;e.onclick=()=>selB(k);$('brushes').append(e)});selB('taper');
+$('sy').onclick=()=>{sym=!sym;$('sy').classList.toggle('on',sym);$('sy').setAttribute('aria-pressed',sym)};$('fit').onclick=fit;addEventListener('resize',fit);
+$('png').onclick=()=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='drawing.png';a.click()});
+function showRef(b){if(!b)return;$('ri').src=URL.createObjectURL(b);$('ref').style.display='block'}
+$('rf').onclick=()=>{const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{idb('put','ref',f.files[0]);showRef(f.files[0])};f.click()};
+$('rx').onclick=()=>{$('ref').style.display='none';idb('put','ref',null)};
+addEventListener('keydown',e=>{if(e.key=='Escape'){$('ref').style.display='none';$('sheet').hidden=true}});$('ls').onclick=()=>$('sheet').hidden=!$('sheet').hidden;$('cl').onclick=()=>$('sheet').hidden=true;
+let SW=[];try{SW=JSON.parse(localStorage.getItem('sh4sw'))||[]}catch(e){}
+const hexes=t=>(t.match(/#?[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)||[]).map(h=>{h=h.replace('#','');if(h.length==3)h=[...h].map(c=>c+c).join('');return '#'+h.toLowerCase()});
+const setCol=h=>{$('col').value=h;$('hex').value=h};
+function swr(){$('sw').innerHTML='';SW.forEach(h=>{const b=document.createElement('button');b.style.background=h;b.setAttribute('aria-label','สี '+h);b.onclick=()=>setCol(h);$('sw').append(b)});$('cs').style.display=SW.length?'':'none'}
+function addHex(){const h=hexes($('hex').value);if(!h.length)return toast('ค่าสีไม่ถูกต้อง เช่น #E8A87C');setCol(h[0]);h.forEach(c=>{SW=SW.filter(x=>x!=c);SW.push(c)});SW=SW.slice(-40);try{localStorage.setItem('sh4sw',JSON.stringify(SW))}catch(e){}swr();toast('เก็บ '+h.length+' สี')}
+$('col').oninput=()=>$('hex').value=$('col').value;
+$('hex').oninput=()=>{const h=hexes($('hex').value);if(h.length)$('col').value=h[0]};
+$('hex').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();addHex()}};
+$('hex').onpaste=()=>setTimeout(addHex,0);$('ah').onclick=addHex;
+$('cs').onclick=()=>{SW=[];try{localStorage.removeItem('sh4sw')}catch(e){}swr()};swr();
+(async()=>{fit();const d=await idb('get','doc');if(d&&d.b&&d.b.length){for(let i=0;i<d.b.length;i++){const c=mk();c.getContext('2d').drawImage(await createImageBitmap(d.b[i]),0,0);LY.push({c,...d.m[i]})}act=Math.min(d.act||0,LY.length-1)}
+else LY.push({c:mk(),v:true,o:1,n:'ชั้น 1'});render();list();showRef(await idb('get','ref'))})();
+</script></body></html>

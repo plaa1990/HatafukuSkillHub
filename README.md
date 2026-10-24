@@ -1,1 +1,3 @@
-# HatafukuSkillHub
+# SkillHub v4
+อัปโหลดทุกไฟล์ไปที่ root ของ repo (GitHub Pages) ถ้าแก้ไฟล์ให้เปลี่ยนเลข skillhub-v7 ใน sw.js
+ข้อมูลอยู่ในเบราว์เซอร์ ใช้ปุ่มส่งออกในหน้าหลักเพื่อสำรอง
