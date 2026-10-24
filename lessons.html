@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><meta name="theme-color" content="#14172a">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>บทเรียนวาดรูป – SkillHub</title>
 <style>
-:root{--bg:#1d1b20;--panel:#2a2730;--line:#3d3945;--tx:#ece8f0;--mu:#a29cae;--ac:#ffb454}
+:root{--bg:#14172a;--panel:#1d2240;--line:#323a66;--tx:#eef0fb;--mu:#a0a8cf;--ac:#f4d35e}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 "Prompt",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 header{display:flex;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;overflow-x:auto}
@@ -13,11 +13,11 @@ header a{color:var(--mu);text-decoration:none;white-space:nowrap}
 header a.on{color:var(--ac)}
 main{max-width:640px;margin:0 auto;padding:16px}
 h1{font-size:1.5rem;margin:.4em 0}
-h2{font-size:1.2rem;margin:1.6em 0 .3em;scroll-margin-top:60px}
+h2{font-size:1.25rem;margin:1.8em 0 .3em;scroll-margin-top:60px}
 p{margin:.4em 0;color:var(--mu)}
 ul{padding-left:1.2em;margin:.4em 0}
 li{margin:.25em 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
 .card b{color:var(--ac)}
 svg{width:100%;height:auto;background:#f6edd9;border-radius:8px;display:block}
 .old{opacity:.35}
@@ -120,7 +120,7 @@ svg{width:100%;height:auto;background:#f6edd9;border-radius:8px;display:block}
 <script>
 const NS='http://www.w3.org/2000/svg';
 const S='fill="none" stroke="#2b3a67" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
-const D={
+const DD={
 cat:{vb:'0 0 200 210',steps:[
  ['วงกลมหัว + กากบาท และวงรีลำตัว',`<g ${S}><circle cx="100" cy="55" r="32"/><path d="M100 23V87M68 55H132"/><ellipse cx="100" cy="135" rx="34" ry="44"/></g>`],
  ['เพิ่มหูที่มุมบน ขาหน้า เท้า และหาง',`<g ${S}><path d="M76 34L72 10L94 26M124 34L128 10L106 26"/><path d="M90 150V190M110 150V190"/><ellipse cx="86" cy="192" rx="9" ry="5"/><ellipse cx="114" cy="192" rx="9" ry="5"/><path d="M134 160C170 160 175 125 160 118"/></g>`],
@@ -155,32 +155,32 @@ const A=o=>({vb:'0 0 200 210',steps:[
  ['เพิ่ม '+o.ex,`<g ${S}>${o.ears}${o.tail}${o.legs||LEG}</g>`],
  ['ใส่หน้าตามเส้นกากบาท',`<g ${S}><circle cx="86" cy="68" r="3.5"/><circle cx="114" cy="68" r="3.5"/><path d="M96 78H104L100 83ZM100 83V87M94 90Q100 94 106 90"/>${o.face||''}</g>`],
  ['ลงสี',`<g stroke="none"><ellipse cx="100" cy="203" rx="46" ry="6" fill="#2b3a6726"/><g fill="${o.c}" opacity=".85">${o.body||BODY}${o.ears}${o.tail}<circle cx="100" cy="68" r="30"/></g><g fill="${o.b}" opacity=".9">${o.belly}</g></g>`]]});
-D.fox=A({ex:'หูแหลมใหญ่ หางพู่ และเท้า',ears:'<path d="M74 46L70 14L96 38M126 46L130 14L104 38"/>',tail:'<path d="M132 170C185 185 195 130 165 120C160 140 150 150 134 150"/>',face:'<path d="M72 78L84 90M128 78L116 90"/>',c:'#e8742f',b:'#fff3e0',belly:'<ellipse cx="100" cy="150" rx="17" ry="30"/><path d="M82 80Q100 100 118 80L112 92H88Z"/>'});
-D.bunny=A({ex:'หูยาว 2 เท่าของหัว และหางกลม',ears:'<ellipse cx="82" cy="20" rx="9" ry="30"/><ellipse cx="118" cy="20" rx="9" ry="30"/>',tail:'<circle cx="138" cy="175" r="10"/>',face:'<path d="M70 72L84 74M70 80L84 78M130 72L116 74M130 80L116 78"/>',c:'#d9d2c8',b:'#ffffff',belly:'<ellipse cx="100" cy="150" rx="18" ry="30"/><ellipse cx="82" cy="20" rx="4" ry="22" fill="#f2b6c0"/><ellipse cx="118" cy="20" rx="4" ry="22" fill="#f2b6c0"/>'});
-D.owl=A({ex:'หูขนสั้น ปีก และเท้า',body:'<ellipse cx="100" cy="135" rx="42" ry="56"/>',ears:'<path d="M74 46L72 28L90 40M126 46L128 28L110 40"/><path d="M62 105Q52 150 74 180M138 105Q148 150 126 180"/>',tail:'',legs:'<path d="M88 190V196M112 190V196M82 196H94M106 196H118"/>',face:'<circle cx="86" cy="68" r="11"/><circle cx="114" cy="68" r="11"/><path d="M92 126q4 5 8 0M100 146q4 5 8 0M84 146q4 5 8 0"/>',c:'#8a5a35',b:'#f0dcb8',belly:'<ellipse cx="100" cy="145" rx="26" ry="38"/><circle cx="86" cy="68" r="11"/><circle cx="114" cy="68" r="11"/>'});
-D.squirrel=A({ex:'หูเล็ก หางใหญ่ขดสูง',ears:'<path d="M76 44L74 22L92 36M124 44L126 22L108 36"/>',tail:'<path d="M132 180C195 200 205 100 150 85C138 108 152 128 132 142"/>',face:'',c:'#c8622b',b:'#f6dcc0',belly:'<ellipse cx="100" cy="150" rx="17" ry="30"/>'});
-D.hedge={vb:'0 0 200 210',steps:[
+DD.fox=A({ex:'หูแหลมใหญ่ หางพู่ และเท้า',ears:'<path d="M74 46L70 14L96 38M126 46L130 14L104 38"/>',tail:'<path d="M132 170C185 185 195 130 165 120C160 140 150 150 134 150"/>',face:'<path d="M72 78L84 90M128 78L116 90"/>',c:'#e8742f',b:'#fff3e0',belly:'<ellipse cx="100" cy="150" rx="17" ry="30"/><path d="M82 80Q100 100 118 80L112 92H88Z"/>'});
+DD.bunny=A({ex:'หูยาว 2 เท่าของหัว และหางกลม',ears:'<ellipse cx="82" cy="20" rx="9" ry="30"/><ellipse cx="118" cy="20" rx="9" ry="30"/>',tail:'<circle cx="138" cy="175" r="10"/>',face:'<path d="M70 72L84 74M70 80L84 78M130 72L116 74M130 80L116 78"/>',c:'#d9d2c8',b:'#ffffff',belly:'<ellipse cx="100" cy="150" rx="18" ry="30"/><ellipse cx="82" cy="20" rx="4" ry="22" fill="#f2b6c0"/><ellipse cx="118" cy="20" rx="4" ry="22" fill="#f2b6c0"/>'});
+DD.owl=A({ex:'หูขนสั้น ปีก และเท้า',body:'<ellipse cx="100" cy="135" rx="42" ry="56"/>',ears:'<path d="M74 46L72 28L90 40M126 46L128 28L110 40"/><path d="M62 105Q52 150 74 180M138 105Q148 150 126 180"/>',tail:'',legs:'<path d="M88 190V196M112 190V196M82 196H94M106 196H118"/>',face:'<circle cx="86" cy="68" r="11"/><circle cx="114" cy="68" r="11"/><path d="M92 126q4 5 8 0M100 146q4 5 8 0M84 146q4 5 8 0"/>',c:'#8a5a35',b:'#f0dcb8',belly:'<ellipse cx="100" cy="145" rx="26" ry="38"/><circle cx="86" cy="68" r="11"/><circle cx="114" cy="68" r="11"/>'});
+DD.squirrel=A({ex:'หูเล็ก หางใหญ่ขดสูง',ears:'<path d="M76 44L74 22L92 36M124 44L126 22L108 36"/>',tail:'<path d="M132 180C195 200 205 100 150 85C138 108 152 128 132 142"/>',face:'',c:'#c8622b',b:'#f6dcc0',belly:'<ellipse cx="100" cy="150" rx="17" ry="30"/>'});
+DD.hedge={vb:'0 0 200 210',steps:[
  ['วงรีลำตัวนอน และวงรีหัวเล็กด้านหน้า',`<g ${S}><ellipse cx="115" cy="125" rx="60" ry="42"/><ellipse cx="55" cy="142" rx="26" ry="20"/></g>`],
  ['ขนแหลมเป็นฟันเลื่อยบนหลัง และเท้า',`<g ${S}><path d="M60 110L66 84L80 100L88 70L102 92L116 66L128 90L146 72L150 98L170 92L168 118"/><ellipse cx="85" cy="170" rx="9" ry="5"/><ellipse cx="135" cy="170" rx="9" ry="5"/></g>`],
  ['ใส่ตา จมูก ปาก',`<g ${S}><circle cx="52" cy="136" r="3.5"/><circle cx="32" cy="146" r="5" fill="#2b3a67"/><path d="M42 154Q50 158 56 154"/></g>`],
  ['ลงสี',`<g stroke="none"><ellipse cx="108" cy="178" rx="62" ry="6" fill="#2b3a6726"/><path d="M60 110L66 84L80 100L88 70L102 92L116 66L128 90L146 72L150 98L170 92L168 118L160 150L70 150Z" fill="#8b5e3c" opacity=".9"/><ellipse cx="55" cy="142" rx="26" ry="20" fill="#f0d3b0"/></g>`]]};
-D.hair={vb:'0 0 200 210',steps:[
+DD.hair={vb:'0 0 200 210',steps:[
  ['วงกลมหัว กากบาท และกราม',`<g ${S}><circle cx="100" cy="90" r="46"/><path d="M62 112Q80 160 100 164Q120 160 138 112M100 44V164M58 100H142"/></g>`],
  ['แสกและแนวไรผม',`<g ${S}><path d="M100 46Q70 60 56 100M100 46Q130 60 144 100"/></g>`],
  ['ก้อนผมรวมใหญ่กว่ากะโหลก',`<g ${S}><path d="M52 100Q36 36 100 26Q164 36 148 100Q164 140 152 180M52 100Q36 140 48 180"/></g>`],
  ['กลุ่มเส้นผมไหลจากแสก',`<g ${S}><path d="M100 46Q85 100 66 160M100 46Q122 90 134 160M80 38Q58 90 54 140"/></g>`]]};
-D.mug={vb:'0 0 200 210',steps:[
+DD.mug={vb:'0 0 200 210',steps:[
  ['ทรงกระบอก: วงรีบน เส้นข้าง และส่วนโค้งก้น',`<g ${S}><ellipse cx="90" cy="70" rx="50" ry="14"/><path d="M40 70V150M140 70V150M40 150Q90 175 140 150"/></g>`],
  ['หูจับ',`<g ${S}><path d="M140 88Q188 88 182 120Q176 148 140 136"/></g>`],
  ['ขอบแก้วด้านใน และผิวกาแฟ',`<g ${S}><ellipse cx="90" cy="72" rx="42" ry="10"/></g>`],
  ['ลงสี เงาด้านขวา และเงาตกพื้น',`<g stroke="none"><ellipse cx="105" cy="170" rx="70" ry="10" fill="#2b3a6726"/><path d="M40 70V150Q90 175 140 150V70Z" fill="#6aa7c9"/><path d="M110 78V165Q128 160 140 150V70Z" fill="#2b3a6755"/><ellipse cx="90" cy="72" rx="42" ry="10" fill="#6b3f26"/></g>`]]};
-D.apple={vb:'0 0 200 210',steps:[
+DD.apple={vb:'0 0 200 210',steps:[
  ['วงกลม และเส้นแสง',`<g ${S}><circle cx="100" cy="115" r="60"/><path d="M62 78Q80 62 98 62" stroke-dasharray="4 4"/></g>`],
  ['รอยบุ๋มด้านบน ก้าน และใบ',`<g ${S}><path d="M100 70Q100 56 108 40M100 52Q125 30 140 48Q122 62 100 52"/></g>`],
  ['เส้นขอบแอปเปิลให้เป็นทรงมีไหล่',`<g ${S}><path d="M100 62Q70 52 48 82Q36 130 70 170Q100 182 130 170Q164 130 152 82Q130 52 100 62"/></g>`],
  ['ลงสี: ด้านมืดอยู่ขวาล่าง ไฮไลต์อยู่ซ้ายบน',`<g stroke="none"><ellipse cx="108" cy="188" rx="52" ry="8" fill="#2b3a6730"/><path d="M100 62Q70 52 48 82Q36 130 70 170Q100 182 130 170Q164 130 152 82Q130 52 100 62" fill="#d6403a"/><path d="M120 90Q160 110 140 165Q120 178 100 178Q150 150 120 90" fill="#7a1d1d66"/><ellipse cx="72" cy="92" rx="9" ry="16" fill="#ffffffaa" transform="rotate(25 72 92)"/><path d="M100 52Q125 30 140 48Q122 62 100 52" fill="#5b9a4a"/></g>`]]};
 
-Object.entries(D).forEach(([k,v])=>build(k,v));
+Object.entries(DD).forEach(([k,v])=>build(k,v));
 
 function hx(h,s,l){h=((h%360)+360)%360;s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return'#'+[f(0),f(8),f(4)].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');}
 let cp=[];
