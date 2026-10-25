@@ -477,7 +477,7 @@
         const w = Math.round(d.w), h = Math.round(d.h);
         if (!(w >= 64 && h >= 64 && w <= 4096 && h <= 4096 && w * h <= 16e6) || !Array.isArray(d.layers) || !d.layers.length || d.layers.length > MAXL || d.layers.some(u => typeof u !== 'string' || !u.startsWith('data:image/'))) continue;
         const b = await Promise.all(d.layers.map(u => fetch(u).then(r => r.blob())));
-        const mm = d.layers.map((_, i) => { const x = (d.m && d.m[i]) || {}; return { v: x.v !== false, o: num(x.o, 0, 1, 1), n: String(x.n || 'ชั้น ' + (i + 1)).slice(0, 40), lk: !!x.lk, bl: Math.round(num(x.bl, 0, BL.length - 1, 0)), k: !!x.k, g: typeof x.g === 'string' ? x.g.slice(0, 30) : undefined }; });
+        const mm = d.layers.map((_, i) => { const x = (d.m && d.m[i]) || {}; return { v: x.v !== false, o: num(x.o, 0, 1, 1), n: String(x.n || 'ชั้น ' + (i + 1)).slice(0, 40), lk: !!x.lk, al: !!x.al, bl: Math.round(num(x.bl, 0, BL.length - 1, 0)), k: !!x.k, g: typeof x.g === 'string' ? x.g.slice(0, 30) : undefined }; });
         const gr = (Array.isArray(d.gr) ? d.gr : []).filter(g => g && typeof g.id === 'string').map(g => ({ id: g.id.slice(0, 30), n: String(g.n || 'กลุ่ม').slice(0, 40), v: g.v !== false, o: num(g.o, 0, 1, 1), x: !!g.x }));
         const id = 'd' + Date.now() + '_' + k;
         DX.push({ id, n: String(d.n || 'ผืนผ้า').slice(0, 40) + ' (นำเข้า)', w, h, bg: d.bg === 't' ? 't' : 'w' });
@@ -544,7 +544,7 @@
       '<small>รูป → ชั้นใหม่: ลากย้าย/ย่อขยาย/หมุนได้ก่อนยืนยัน · รูป → ผืนผ้าใหม่: ขนาดเท่ารูป พร้อมลบพื้นหลัง · วางรูป (Ctrl+V) หรือลากไฟล์มาวางบนผืนผ้าได้เช่นกัน</small>' +
       '<h3>ส่งออก</h3><select id="xf" aria-label="รูปแบบไฟล์" style="max-width:100%">' + Object.entries(FMT).map(([k, f]) => '<option value="' + k + '">' + f.n + '</option>').join('') + '</select>' +
       '<div id="xo"></div><div class="mr"><button class="b" id="xs">⬇ บันทึกไฟล์</button><button class="b" id="xh">📤 แชร์</button><button class="b" id="xp">🖨 พิมพ์</button></div>' +
-      '<h3>สำรองภาพวาด</h3><div class="mr"><button class="b" id="fb1">สำรองผืนผ้านี้</button><button class="b" id="fb2">สำรองทุกผืนผ้า</button></div><small>ได้ไฟล์ .skillhub.json เก็บทุกเลเยอร์ กลุ่ม และโหมดผสม เปิดกลับได้ด้วย "เปิดไฟล์โครงการ" (ความคืบหน้าบทเรียนสำรองที่หน้าหลัก)</small>' +
+      '<h3>สำรองภาพวาด</h3><div class="mr"><button class="b" id="fb1">สำรองผืนผ้านี้</button><button class="b" id="fb2">สำรองทุกผืนผ้า</button></div><small>ได้ไฟล์ .skillhub.json เก็บทุกเลเยอร์ กลุ่ม และโหมดผสม เปิดกลับได้ด้วย "เปิดไฟล์โครงการ" </small>' +
       '<h3>ประวัติเวอร์ชัน</h3><div class="mr"><button class="b" id="fv1">+ บันทึกเวอร์ชันตอนนี้</button><button class="b" id="fv2">ดูประวัติ / กู้คืน</button></div>' +
       '<p><button class="b" id="fxx">ปิด (Esc)</button></p>');
     const fmt = () => $('xf').value;

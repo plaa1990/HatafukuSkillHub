@@ -1,3 +1,67 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SkillHub – สอนวาดรูป</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><meta name="theme-color" content="#14172a"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="app.css"></head>
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SkillHub Studio – แอปวาดรูป</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><meta name="theme-color" content="#14172a"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="app.css">
+<style>
+body.lt{--bg:#f3f4fa;--panel:#ffffff;--line:#c9cde3;--tx:#1a1d33;--mu:#555c80;--ac:#b8860b;--ac2:#d1543f}
+.wrap{max-width:980px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top .acts{display:flex;gap:8px;flex-wrap:wrap}
+.hero{margin:14px 0}.hero .goal{margin:0;font-size:13px;color:var(--mu);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin:10px 0 24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.card .th{display:block;width:100%;aspect-ratio:4/3;background:#fff repeating-conic-gradient(#e6e6e6 0 25%,#fff 0 50%) 0 0/16px 16px;border:0;padding:0;border-radius:0;cursor:pointer;position:relative}
+.card .th img{width:100%;height:100%;object-fit:contain;display:block}
+.card .th.empty::after{content:"🎨";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;opacity:.5}
+.card .meta{padding:8px 10px 2px;min-width:0}.card .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card .meta small{color:var(--mu)}
+.card .ac{display:flex;gap:4px;padding:6px 8px 8px}.card .ac button{flex:1;min-height:40px;padding:2px}
+.card.new{align-items:center;justify-content:center;min-height:210px;border-style:dashed;cursor:pointer;color:var(--mu);font-size:15px;gap:6px}.card.new b{font-size:40px;color:var(--ac);line-height:1}
+.empty-t{color:var(--mu);margin:6px 0}
+.foot{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 28px}
+select,input[type=text]{background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;min-height:44px;max-width:100%}
+</style></head>
 <body>
-<main class="wrap"><h1>SkillHub</h1><p class="sub">ฝึกวาดวันละนิด เห็นพัฒนาการทุกวัน</p><div id="home"></div></main><script src="app.js"></script></body></html>
+<main class="wrap">
+ <div class="top"><div><h1>SkillHub Studio</h1><p class="sub">แอปวาดรูปในเครื่องคุณ — ภาพทั้งหมดอยู่ในเบราว์เซอร์นี้</p></div>
+ <div class="acts"><button class="b on" id="newb">＋ ผืนผ้าใหม่</button><a class="b" href="studio.html#files">📁 นำเข้า / สำรอง</a></div></div>
+ <section class="hero" id="hero"></section>
+ <h2>ผืนผ้าของฉัน</h2>
+ <div class="grid" id="grid" role="list"></div>
+ <div class="foot"><button id="ex">ส่งออกสถิติการฝึก</button><button id="im">นำเข้าสถิติ</button></div>
+</main>
+<script src="app.js"></script>
+<script>
+const SZ=[['4:3 (1200×900)',1200,900],['จัตุรัส (1000×1000)',1000,1000],['แนวตั้ง 3:4 (900×1200)',900,1200],['A4 แนวตั้ง (990×1400)',990,1400],['16:9 (1280×720)',1280,720]];
+const escH=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+if(localStorage.getItem('sh4th')==='lt')document.body.classList.add('lt');
+const db=new Promise(r=>{const q=indexedDB.open('sh4',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)});
+const idb=(m,k,v)=>db.then(d=>d&&new Promise(r=>{const o=d.transaction('k',m=='get'?'readonly':'readwrite').objectStore('k'),q=m=='get'?o.get(k):o.put(v,k);q.onsuccess=()=>r(q.result);q.onerror=()=>r()}));
+let DX=[];
+const openDoc=id=>{try{localStorage.setItem('sh4cur',id)}catch(e){}location.href='studio.html'};
+
+function hero(){rl();const m=Math.floor((D.min[T()]||0)/60),tot=Object.values(D.min).reduce((a,b)=>a+b,0)/60|0;
+$('hero').innerHTML='<div class="ring" style="--p:'+Math.min(100,m/D.goal*100)+'%" role="img" aria-label="วันนี้ '+m+' จาก '+D.goal+' นาที"><b>'+m+'</b><span>/ '+D.goal+' นาที</span></div><div class="hs"><div><b>'+streak()+'</b>วันติดต่อกัน</div><div><b>'+tot+'</b>นาทีสะสม</div><p class="goal">เป้าหมายรายวัน <input id="goal" type="number" min="1" max="240" value="'+D.goal+'" aria-label="เป้าหมายนาทีต่อวัน" style="width:72px"> นาที <button id="nt">เปิดแจ้งเตือน</button></p></div>';
+$('goal').onchange=e=>{D.goal=Math.max(1,+e.target.value||10);sv();hero()};
+$('nt').onclick=()=>window.Notification?Notification.requestPermission().then(p=>toast(p=='granted'?'จะเตือนหลัง 18:00 ถ้ายังไม่ถึงเป้า (ตอนเปิดแอป)':'ไม่ได้รับอนุญาต')):toast('เบราว์เซอร์ไม่รองรับ')}
+
+function grid(){
+ const list=DX.slice().sort((a,b)=>(b.t||0)-(a.t||0));
+ $('grid').innerHTML='<button class="card new" id="newc" role="listitem"><b>＋</b>ผืนผ้าใหม่</button>'+list.map(d=>'<div class="card" role="listitem"><button class="th'+(d.th?'':' empty')+'" data-o="'+escH(d.id)+'" aria-label="เปิด '+escH(d.n)+'">'+(d.th?'<img src="'+d.th+'" alt="">':'')+'</button><div class="meta"><b>'+escH(d.n)+'</b><small>'+d.w+'×'+d.h+(d.bg=='t'?' · โปร่งใส':'')+(d.t?' · '+new Date(d.t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'')+'</small></div><div class="ac"><button data-o="'+escH(d.id)+'">เปิด</button><button data-n="'+escH(d.id)+'" aria-label="เปลี่ยนชื่อ">✎</button><button data-c="'+escH(d.id)+'" aria-label="ทำสำเนา">⧉</button><button data-x="'+escH(d.id)+'" aria-label="ลบ">🗑</button></div></div>').join('');
+ $('newc').onclick=newDialog;
+ $('grid').querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>openDoc(b.dataset.o));
+ $('grid').querySelectorAll('[data-n]').forEach(b=>b.onclick=async()=>{const d=DX.find(x=>x.id==b.dataset.n),n=prompt('ชื่อผืนผ้า',d.n);if(n&&n.trim()){d.n=n.trim().slice(0,40);await idb('put','idx',DX);grid()}});
+ $('grid').querySelectorAll('[data-c]').forEach(b=>b.onclick=async()=>{const d=DX.find(x=>x.id==b.dataset.c),rec=await idb('get','d:'+d.id);const id='d'+Date.now();DX.push({...d,id,n:(d.n+' สำเนา').slice(0,40),t:Date.now()});if(rec)await idb('put','d:'+id,rec);await idb('put','idx',DX);grid();toast('ทำสำเนาแล้ว')});
+ $('grid').querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{const id=b.dataset.x,d=DX.find(x=>x.id==id);if(!confirm('ลบ "'+d.n+'" ถาวร? (กู้คืนไม่ได้ ถ้าต้องการเก็บไว้ให้สำรองก่อน)'))return;
+  DX=DX.filter(x=>x.id!=id);await idb('put','d:'+id,null);await idb('put','tl:'+id,null);
+  const vi=(await idb('get','vi:'+id))||[];for(const v of vi)await idb('put','vd:'+id+':'+v.t,null);await idb('put','vi:'+id,null);
+  await idb('put','idx',DX);grid()})}
+
+function newDialog(){
+ const m=modal('<h2>ผืนผ้าใหม่</h2><p><label>ชื่อ<br><input type="text" id="nn" maxlength="40" placeholder="ผืนผ้า '+(DX.length+1)+'" style="width:100%"></label></p><p><select id="gsz" aria-label="ขนาด">'+SZ.map((z,i)=>'<option value="'+i+'">'+z[0]+'</option>').join('')+'<option value="c">กำหนดเอง…</option></select> <span id="gcs" hidden><input id="gcw" type="number" min="64" max="4096" value="1200" aria-label="กว้าง" style="width:84px"> × <input id="gch" type="number" min="64" max="4096" value="900" aria-label="สูง" style="width:84px"></span></p><p><select id="gbg" aria-label="พื้นหลัง"><option value="w">พื้นขาว</option><option value="t">โปร่งใส</option></select></p><p><button class="b on" id="go">สร้างแล้วเริ่มวาด</button> <button class="b" id="cx">ยกเลิก</button></p>');
+ $('gsz').onchange=()=>{$('gcs').hidden=$('gsz').value!='c'};$('cx').onclick=m.close;
+ $('go').onclick=async()=>{let z=SZ[$('gsz').value];if($('gsz').value=='c'){const w=Math.round(+$('gcw').value),h=Math.round(+$('gch').value);if(!(w>=64&&h>=64&&w<=4096&&h<=4096))return toast('ขนาดต้องอยู่ระหว่าง 64–4096 px');if(w*h>16e6)return toast('ใหญ่เกินไป (รวมไม่เกิน 16 ล้านพิกเซล)');z=['',w,h]}
+  const id='d'+Date.now();DX.push({id,n:($('nn').value.trim()||'ผืนผ้า '+(DX.length+1)).slice(0,40),w:z[1],h:z[2],bg:$('gbg').value,t:Date.now()});await idb('put','idx',DX);openDoc(id)}}
+
+$('newb').onclick=newDialog;
+$('ex').onclick=()=>{rl();D.exp=Date.now();sv();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:'application/json'}));a.download='skillhub-stats.json';a.click()};
+$('im').onclick=()=>{const f=document.createElement('input');f.type='file';f.accept='.json';f.onchange=async()=>{try{const j=JSON.parse(await f.files[0].text());if(!j||typeof j!='object'||!j.min)throw 0;D=j;D.goal=D.goal||10;sv();hero();toast('นำเข้าแล้ว')}catch(e){toast('ไฟล์ไม่ถูกต้อง')}};f.click()};
+async function load(){DX=(await idb('get','idx'))||[];if(!Array.isArray(DX))DX=[];hero();grid()}
+load();addEventListener('pageshow',e=>{if(e.persisted)load()});
+</script></body></html>
